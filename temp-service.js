@@ -1,14 +1,11 @@
+var PushService = require('./push-service');
+
 var fbAuthKey = require('./.config/config.json').fbAuthKey;
 
 var firebase = require('firebase').initializeApp({
     serviceAccount: "./.config/service-account.json",
     databaseURL: "https://bite-4ce99.firebaseio.com"    
 });
-
-var axios = require('axios');
-axios.defaults.headers.common['Authorization'] = `key=${fbAuthKey}`;
-axios.defaults.headers.post['Content-Type'] = 'application/json';
-
 
 var ref = firebase.database().ref();
 var now = new Date().getTime();
@@ -79,7 +76,7 @@ function RunService() {
                 `${user.name} heeft een nieuwe Bite geopend bij ${store.name}!`
             ]
 
-            let message = messageTemplates;
+            let message = messageTemplates[0];
             console.log(timestamp, `${user.name} heeft een nieuwe Bite geopend bij ${store.name}!`);
 
             if( !sendPush ) {
@@ -97,6 +94,8 @@ function RunService() {
                         image_url: user.photo  //'https://static.thuisbezorgd.nl/images/restaurants/nl/NP07RON/logo_small.png' //                   
                     }
                 }
+
+                PushService.sendPush(payload);
 
                 // disable sending push (for now)
                 // axios.post('https://fcm.googleapis.com/fcm/send', payload)
