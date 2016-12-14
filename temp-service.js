@@ -98,9 +98,10 @@ function RunService() {
                     }
                 }
 
-                axios.post('https://fcm.googleapis.com/fcm/send', payload)
-                // .then((response) => console.log(response))
-                .catch((err) => console.log(err.toString()))
+                // disable sending push (for now)
+                // axios.post('https://fcm.googleapis.com/fcm/send', payload)
+                // // .then((response) => console.log(response))
+                // .catch((err) => console.log(err.toString()))
 
             }
 
