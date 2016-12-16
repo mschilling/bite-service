@@ -10,7 +10,7 @@ var firebase = require('firebase').initializeApp({
 
 
  var pl = {
-        to: "<push_key>",
+        to: "fKxWyn0o4nY:APA91bEvlfda3qkP593bjrNMnlsPuHkAYo8Z-9PuqHyvFN3aPiUsEhPfH8nwYhtFo7qQ8qUiqLWqzit-4nUIl6AluYFSu9l3GucXWYR1pyK94TrcJmrQQo9NRmWilnaQp3XH8fvZJ3Fe",
         data: {
             type: 0,
             message: "Hier het bericht 2",

@@ -4,8 +4,12 @@ var fbAuthKey = require('./.config/config.json').fbAuthKey;
 
 var firebase = require('firebase').initializeApp({
     serviceAccount: "./.config/service-account.json",
-    databaseURL: "https://bite-4ce99.firebaseio.com"    
+    databaseURL: "https://bite-4ce99.firebaseio.com"
 });
+
+var Service = require('./subscription-service');
+var service = new Service(firebase);
+service.start();
 
 var ref = firebase.database().ref();
 var now = new Date().getTime();
@@ -47,7 +51,7 @@ function InitializeService() {
             });
             // console.log(stores.length);
             return stores;
-        }) 
+        })
 
         .then(() => {
             console.log('Initialisation completed');
@@ -85,17 +89,21 @@ function RunService() {
                 // console.log('Sent push', new Date( timestamp ).toISOString(), new Date(now).toISOString() )
 
                 var payload = {
-                    to: "/topics/news",
+                    to: "/topics/notify_bite_open",
+                    // "condition": "'notify_bite_open' in topics || 'notify_bite_closed' in topics",
                     data: {
                         type: 0,
                         message: message,
                         title: title,
                         bite: snapshot.key,
-                        image_url: user.photo  //'https://static.thuisbezorgd.nl/images/restaurants/nl/NP07RON/logo_small.png' //                   
+                        image_url: user.photo  //'https://static.thuisbezorgd.nl/images/restaurants/nl/NP07RON/logo_small.png' //
                     }
                 }
 
                 PushService.sendPush(payload);
+
+                // payload.to = "/topics/notify_all"
+                // PushService.sendPush(payload);
 
                 // disable sending push (for now)
                 // axios.post('https://fcm.googleapis.com/fcm/send', payload)
