@@ -51,10 +51,9 @@ SubscriptionService.prototype.start = function() {
     updateRef.update(updates)
 
     //Cleanup form queue
-    setTimeout( () => _ref.child(`subscribe_queue/` + snapshot.key).remove(), 20000);
+    setTimeout( () => _ref.child(`subscribe_queue/` + snapshot.key).remove(), 1000);
 
   }))
-
 
 }
 
