@@ -1,10 +1,11 @@
-var PushService = require('./push-service');
-
 var fbAuthKey = require('./.config/config.json').fbAuthKey;
 
+var fcm = require('./lib/fcm-helper');
+fcm.setAuthorization(fbAuthKey);
+
 var firebase = require('firebase').initializeApp({
-    serviceAccount: "./.config/service-account.json",
-    databaseURL: "https://bite-4ce99.firebaseio.com"
+  serviceAccount: './.config/service-account.json',
+  databaseURL: 'https://bite-4ce99.firebaseio.com'
 });
 
 var Service = require('./subscription-service');
@@ -18,113 +19,125 @@ var users = [];
 var stores = [];
 
 function InitializeService() {
+  console.log('Initialise service');
 
-    console.log('Initialise service');
+  return new Promise(function (resolve, reject) {
+    ref.child('users').once('value')
 
-    return new Promise(function(resolve,reject){
+      .then((snapshot) => {
+        console.log('Fetching users');
+        snapshot.forEach(user => {
+          users.push({
+            name: user.val().display_name || user.val().name,
+            photo: user.val().photo_url,
+            key: user.key
+          });
+        });
+        // console.log(users.length);
+        return users;
+      })
 
-        ref.child('users').once('value')
+      .then(() => ref.child('stores').once('value'))
 
-        .then((snapshot)=> {
-            console.log('Fetching users');
-            snapshot.forEach(user => {
-                users.push({
-                    name: user.val().display_name || user.val().name,
-                    photo: user.val().photo_url,
-                    key: user.key
-                })
-            });
-            // console.log(users.length);
-            return users;
-        })
+      .then((snapshot) => {
+        console.log('Fetching stores');
+        snapshot.forEach(store => {
+          let items = (store.val().category || []);
+          const vals = Object.keys(items).map(key => items[key].emoji);
 
-        .then(() => ref.child('stores').once('value'))
+          stores.push({
+            name: store.val().name,
+            location: store.val().location,
+            key: store.key,
+            emojis: vals.join('')
+          });
+        });
+        // console.log(stores.length);
+        return stores;
+      })
 
-        .then((snapshot)=> {
-            console.log('Fetching stores');
-            snapshot.forEach(store => {
-                stores.push({
-                    name: store.val().name,
-                    location: store.val().location,
-                    key: store.key
-                })
-            });
-            // console.log(stores.length);
-            return stores;
-        })
+      .then(() => {
+        console.log('Initialisation completed');
+        resolve(true);
+      })
 
-        .then(() => {
-            console.log('Initialisation completed');
-            resolve(true);
-        })
-
-        ;
-    })
-
+      ;
+  });
 }
 
 function RunService() {
-    return Promise.resolve()
+  return Promise.resolve()
     .then(() => {
-        ref.child('orders').on('child_added', (snapshot) => {
-            // console.log('Watch orders', snapshot.val(), stores);
+      ref.child('orders').on('child_removed', (snapshot) => {
+        let store = stores.find(p => p.key == snapshot.val().store);
+        let user = users.find(p => p.key == snapshot.val().opened_by);
+        let timestamp = new Date(snapshot.val().open_time || 0).getTime();
 
-            let user = users.find(p=>p.key == snapshot.val().opened_by);
-            let store = stores.find(p=>p.key == snapshot.val().store);
-            let timestamp = new Date(snapshot.val().open_time || 0).getTime();
-            let sendPush = (timestamp > now);
+        let title = `${store.name} is gesloten`;
+        let message = `${user.name}'s Bite ${store.name} is helaas verwijderd 😢`;
+        console.log(timestamp, message, snapshot.val());
 
-            let title = `${store.name} is open in Bite`;
+        var payload = {
+          to: '/topics/notify_bite_closed',
+          data: {
+            type: 0,
+            message: message,
+            title: title,
+            bite: snapshot.key,
+            image_url: user.photo  //'https://static.thuisbezorgd.nl/images/restaurants/nl/NP07RON/logo_small.png' //
+          }
+        };
 
-            let messageTemplates = [
-                `${user.name} heeft een nieuwe Bite geopend bij ${store.name}!`
-            ]
+        PushService.sendPush(payload);
+      });
 
-            let message = messageTemplates[0];
-            console.log(timestamp, `${user.name} heeft een nieuwe Bite geopend bij ${store.name}!`);
 
-            if( !sendPush ) {
-                console.log('Don\'t sent push', new Date( timestamp ).toISOString(), new Date(now).toISOString() )
-            } else {
-                // console.log('Sent push', new Date( timestamp ).toISOString(), new Date(now).toISOString() )
 
-                var payload = {
-                    to: "/topics/notify_bite_open",
-                    // "condition": "'notify_bite_open' in topics || 'notify_bite_closed' in topics",
-                    data: {
-                        type: 0,
-                        message: message,
-                        title: title,
-                        bite: snapshot.key,
-                        image_url: user.photo  //'https://static.thuisbezorgd.nl/images/restaurants/nl/NP07RON/logo_small.png' //
-                    }
-                }
+      ref.child('orders').on('child_added', (snapshot) => {
+        // console.log('Watch orders', snapshot.val(), stores);
 
-                PushService.sendPush(payload);
+        let user = users.find(p => p.key == snapshot.val().opened_by);
+        let store = stores.find(p => p.key == snapshot.val().store);
+        let timestamp = new Date(snapshot.val().open_time || 0).getTime();
+        let sendPush = (timestamp > now);
 
-                // payload.to = "/topics/notify_all"
-                // PushService.sendPush(payload);
+        let title = `${store.name} is open ${store.emojis}`;
 
-                // disable sending push (for now)
-                // axios.post('https://fcm.googleapis.com/fcm/send', payload)
-                // // .then((response) => console.log(response))
-                // .catch((err) => console.log(err.toString()))
+        let messageTemplates = [
+          `${user.name} heeft een nieuwe Bite geopend bij ${store.name}!`
+        ];
 
+        let message = messageTemplates[0];
+        console.log(timestamp, `${user.name} heeft een nieuwe Bite geopend bij ${store.name}!`);
+
+        if (!sendPush) {
+          console.log('Don\'t sent push', new Date(timestamp).toISOString(), new Date(now).toISOString());
+        } else {
+          // console.log('Sent push', new Date( timestamp ).toISOString(), new Date(now).toISOString() )
+
+          var payload = {
+            to: '/topics/notify_bite_open',
+            // "condition": "'notify_bite_open' in topics || 'notify_bite_closed' in topics",
+            data: {
+              type: 0,
+              message: message,
+              title: title,
+              bite: snapshot.key,
+              image_url: user.photo  //'https://static.thuisbezorgd.nl/images/restaurants/nl/NP07RON/logo_small.png' //
             }
+          };
 
-
-        })
-
+          fcm.sendPush(payload);
+        }
+      });
     })
 
     ;
-
-
 }
 
 InitializeService()
-    .then(() => RunService())
-    .then(()=>console.log('Service is running!'));
+  .then(() => RunService())
+  .then(() => console.log('Service is running!'));
 
 
 return;
