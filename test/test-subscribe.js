@@ -32,4 +32,4 @@ setTimeout(()=> subscribe(userToken, undefined, 'notify_bite_closed', true), 0);
 // setTimeout(()=> subscribe(userToken, undefined, null, false), 15000)
 // setTimeout(()=> subscribe(userToken, undefined, 'notify_bite_open', false), 15000)
 setTimeout(()=> subscribe(userToken, undefined, 'notify_bite_closing', false), 20000)
-setTimeout(()=> subscribe(userToken, undefined, 'notify_bite_closed', false), 20000)
+// setTimeout(()=> subscribe(userToken, undefined, 'notify_bite_closed', false), 20000)
