@@ -10,7 +10,7 @@ fcm.setAuthorization(fbAuthKey);
 // service.start();
 
 api.onBiteOpened((snapshot) => notifyBiteIsOpen(snapshot));
-api.onBiteClosed((snapshot) => api.archiveBite(snapshot.key));
+api.onBiteClosed((snapshot) => api.archiveOrder(snapshot.key));
 api.onBiteRemoved((snapshot) => notifyBiteIsClosed(snapshot));
 
 function notifyBiteIsOpen(snapshot) {
