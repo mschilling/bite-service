@@ -13,6 +13,8 @@ api.onBiteOpened((snapshot) => notifyBiteIsOpen(snapshot));
 api.onBiteClosed((snapshot) => api.archiveOrder(snapshot.key));
 api.onBiteRemoved((snapshot) => notifyBiteIsClosed(snapshot));
 
+api.onSubscribe((snapshot) => onSubscribe(snapshot));
+
 function notifyBiteIsOpen(snapshot) {
   getOrderDetails(snapshot.val())
     .then((data) => {
@@ -63,3 +65,36 @@ function getOrderDetails(order) {
 
   return Promise.all([resolveRestaurant, resolveUser]).then(() => orderDetails);
 }
+
+function onSubscribe(snapshot) {
+  let {user, token, topic, subscribe = false} = snapshot.val();
+  let value = (subscribe === true ? true : null);
+  const updates = {};
+
+  if (topic) {
+    updates[topic] = value;
+
+    if (subscribe) {
+      fcm.subscribeTopic(token, topic);
+    } else {
+      fcm.unSubscribeTopic(token, topic);
+    }
+  } else {
+    // Initial setup? Subscribe to notify_system and all
+    ['notify_system', 'notify_all'].forEach((t) => {
+      // updates[`user_subscriptions/${user}`] = {[t]: value};
+      updates[t] = value;
+
+      if (subscribe) {
+        fcm.subscribeTopic(token, t);
+      } else {
+        fcm.unSubscribeTopic(token, t);
+      }
+    });
+  }
+
+  api.setUserSubscription(user, updates);
+
+  // Cleanup form queue
+  setTimeout(() => api.removeSubscriptionFromQueue(snapshot.key), 1000);
+};
