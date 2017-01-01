@@ -1,9 +1,10 @@
-const moment = require('moment');
+// const moment = require('moment');
 const api = require('./lib/bite-api');
 
-const fbAuthKey = require('./.config/config.json').fbAuthKey;
+const fbConfig = require('./.config/config.json');
 const fcm = require('./lib/fcm-helper');
-fcm.setAuthorization(fbAuthKey);
+fcm.setAuthorization(fbConfig.fbAuthKey);
+fcm.setDebugToken(fbConfig.fcmDebugToken);
 
 // var Service = require('./lib/subscription-service');
 // var service = new Service(firebase);
