@@ -56,6 +56,22 @@ function notifyBiteIsClosed(orderId) {
         data: {
           type: 0,
           title: `${data.store.name} is gesloten`,
+          message: `${data.user.name}'s Bite ${data.store.name} is nu gesloten 😢`,
+          bite: orderId,
+          image_url: data.user.photo_url
+        }
+      });
+    });
+}
+
+function notifyBiteIsRemoved(orderId) {
+  getOrderDetails(orderId)
+    .then((data) => {
+      fcm.sendPush({
+        to: '/topics/notify_bite_closed',
+        data: {
+          type: 0,
+          title: `${data.store.name} is verwijderd`,
           message: `${data.user.name}'s Bite ${data.store.name} is helaas verwijderd 😢`,
           bite: orderId,
           image_url: data.user.photo_url
