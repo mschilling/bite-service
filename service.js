@@ -1,5 +1,6 @@
 // const moment = require('moment');
 const api = require('./lib/bite-api');
+const ref = api.getFirebaseRef();
 
 const fbConfig = require('./.config/config.json');
 const fcm = require('./lib/fcm-helper');
@@ -10,25 +11,30 @@ fcm.setDebugToken(fbConfig.fcmDebugToken);
 // var service = new Service(firebase);
 // service.start();
 
-api.onBiteOpened((snapshot) => notifyBiteIsOpen(snapshot));
+// api.onBiteOpened((snapshot) => notifyBiteIsOpen(snapshot));
 api.onBiteClosed((snapshot) => api.archiveOrder(snapshot.key));
 api.onBiteRemoved((snapshot) => notifyBiteIsClosed(snapshot));
 
 api.onSubscribe((snapshot) => onSubscribe(snapshot));
 
 
-// ref.child('orders').on('child_added', (snapshot) => {
-//   console.log(`Added order ${snapshot.key}`);
-//   snapshot.ref.child('status').on('value', onOrderStatusChanged);
-// });
+ref.child('orders').on('child_added', (snapshot) => {
+  console.log(`Added order ${snapshot.key}`);
+  snapshot.ref.child('status').on('value', onOrderStatusChanged);
+});
 
-// function onOrderStatusChanged(snapshot) {
-//   console.log(`Order status changed to ${snapshot.val()}`);
-// }
+function onOrderStatusChanged(snapshot) {
+  let orderId = snapshot.ref.parent.key;
+  console.log(`Order status ${orderId} changed to ${snapshot.val()}`);
+  if (snapshot.val() === 'new') {
+    snapshot.ref.set('open');
+    notifyBiteIsOpen(orderId);
+  }
+}
 
 
-function notifyBiteIsOpen(snapshot) {
-  getOrderDetails(snapshot.val())
+function notifyBiteIsOpen(orderId) {
+  getOrderDetails(orderId)
     .then((data) => {
       fcm.sendPush({
         to: '/topics/notify_bite_open',
@@ -36,7 +42,7 @@ function notifyBiteIsOpen(snapshot) {
           type: 0,
           message: `${data.user.name} heeft een nieuwe Bite geopend bij ${data.store.name}!`,
           title: `${data.store.name} is open ${data.store.emojis}`,
-          bite: snapshot.key,
+          bite: orderId,
           image_url: data.user.photo_url
         }
       });
@@ -59,23 +65,26 @@ function notifyBiteIsClosed(snapshot) {
     });
 }
 
-function getOrderDetails(order) {
+function getOrderDetails(orderId) {
   const orderDetails = {};
 
-  const resolveRestaurant = api.getRestaurant(order.store)
-    .then((result) => {
-      orderDetails.store = result;
-      const items = (result.category || []);
-      orderDetails.store.emojis = Object.keys(items).map(key => items[key].emoji).join('');
-    });
+  return ref.child('orders/' + orderId).once('value').then((snapshot) => {
+    const order = snapshot.val();
+    const resolveRestaurant = api.getRestaurant(order.store)
+      .then((result) => {
+        orderDetails.store = result;
+        const items = (result.category || []);
+        orderDetails.store.emojis = Object.keys(items).map(key => items[key].emoji).join('');
+      });
 
-  const resolveUser = api.getUser(order.opened_by)
-    .then((result) => {
-      orderDetails.user = result;
-      orderDetails.user.name = result.display_name || result.name;
-    });
+    const resolveUser = api.getUser(order.opened_by)
+      .then((result) => {
+        orderDetails.user = result;
+        orderDetails.user.name = result.display_name || result.name;
+      });
 
-  return Promise.all([resolveRestaurant, resolveUser]).then(() => orderDetails);
+    return Promise.all([resolveRestaurant, resolveUser]).then(() => orderDetails);
+  });
 }
 
 function onSubscribe(snapshot) {
