@@ -13,15 +13,13 @@ api.onBiteRemoved((snapshot) => notifyBiteIsClosed(snapshot));
 
 api.onSubscribe((snapshot) => onSubscribe(snapshot));
 
-
 ref.child('orders').on('child_added', (snapshot) => {
-  console.log(`Added order ${snapshot.key}`);
   snapshot.ref.child('status').on('value', onOrderStatusChanged);
 });
 
 function onOrderStatusChanged(snapshot) {
-  let orderId = snapshot.ref.parent.key;
-  console.log(`Order status ${orderId} changed to ${snapshot.val()}`);
+  const orderId = snapshot.ref.parent.key;
+  console.log(`Order status ${orderId} set to ${snapshot.val()}`);
   if (snapshot.val() === 'new') {
     snapshot.ref.set('open');
     notifyBiteIsOpen(orderId);
