@@ -7,11 +7,12 @@ const fcm = require('./lib/fcm-helper');
 fcm.setAuthorization(fbConfig.fbAuthKey);
 fcm.setDebugToken(fbConfig.fcmDebugToken);
 
-api.onSubscribe((snapshot) => onSubscribe(snapshot));
-
 ref.child('orders').on('child_added', (snapshot) => {
   snapshot.ref.child('status').on('value', onOrderStatusChanged);
 });
+
+ref.child('subscribe_queue').on('child_added', onSubscribe);
+
 
 function onOrderStatusChanged(snapshot) {
   const orderId = snapshot.ref.parent.key;
