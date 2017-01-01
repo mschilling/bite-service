@@ -7,18 +7,10 @@ const fcm = require('./lib/fcm-helper');
 fcm.setAuthorization(fbConfig.fbAuthKey);
 fcm.setDebugToken(fbConfig.fcmDebugToken);
 
-// api.onBiteOpened((snapshot) => notifyBiteIsOpen(snapshot));
-api.onBiteClosed((snapshot) => api.archiveOrder(snapshot.key));
-// api.onBiteRemoved((snapshot) => notifyBiteIsClosed(snapshot));
-
 api.onSubscribe((snapshot) => onSubscribe(snapshot));
 
 ref.child('orders').on('child_added', (snapshot) => {
   snapshot.ref.child('status').on('value', onOrderStatusChanged);
-});
-
-ref.child('orders').on('child_removed', (snapshot) => {
-  notifyBiteIsRemoved(snapshot.key);
 });
 
 function onOrderStatusChanged(snapshot) {
@@ -61,22 +53,6 @@ function notifyBiteIsClosed(orderId) {
           type: 0,
           title: `${data.store.name} is gesloten`,
           message: `${data.user.name}'s Bite ${data.store.name} is nu gesloten 😢`,
-          bite: orderId,
-          image_url: data.user.photo_url
-        }
-      });
-    });
-}
-
-function notifyBiteIsRemoved(orderId) {
-  getOrderDetails(orderId)
-    .then((data) => {
-      fcm.sendPush({
-        to: '/topics/notify_bite_closed',
-        data: {
-          type: 0,
-          title: `${data.store.name} is verwijderd`,
-          message: `${data.user.name}'s Bite ${data.store.name} is helaas verwijderd 😢`,
           bite: orderId,
           image_url: data.user.photo_url
         }
