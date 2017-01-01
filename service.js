@@ -7,10 +7,6 @@ const fcm = require('./lib/fcm-helper');
 fcm.setAuthorization(fbConfig.fbAuthKey);
 fcm.setDebugToken(fbConfig.fcmDebugToken);
 
-// var Service = require('./lib/subscription-service');
-// var service = new Service(firebase);
-// service.start();
-
 // api.onBiteOpened((snapshot) => notifyBiteIsOpen(snapshot));
 api.onBiteClosed((snapshot) => api.archiveOrder(snapshot.key));
 api.onBiteRemoved((snapshot) => notifyBiteIsClosed(snapshot));
@@ -31,7 +27,6 @@ function onOrderStatusChanged(snapshot) {
     notifyBiteIsOpen(orderId);
   }
 }
-
 
 function notifyBiteIsOpen(orderId) {
   getOrderDetails(orderId)
