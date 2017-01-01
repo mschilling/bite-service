@@ -17,6 +17,10 @@ ref.child('orders').on('child_added', (snapshot) => {
   snapshot.ref.child('status').on('value', onOrderStatusChanged);
 });
 
+ref.child('orders').on('child_removed', (snapshot) => {
+  notifyBiteIsRemoved(snapshot.key);
+});
+
 function onOrderStatusChanged(snapshot) {
   const orderId = snapshot.ref.parent.key;
   console.log(`Order status ${orderId} set to ${snapshot.val()}`);
