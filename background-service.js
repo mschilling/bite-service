@@ -47,15 +47,17 @@ function cleanupOrderData(snapshot) {
   const userOrderRef = ref.child('user_order').child(snapshot.key);
   const userOrderLockedRef = ref.child('user_order_locked').child(snapshot.key);
 
-  // remove user orders + locked references
-  userOrderRef.remove();
-  userOrderLockedRef.remove();
+  if (snapshot.val().status !== 'closed') {
+    // remove user orders + locked references
+    userOrderRef.remove();
+    userOrderLockedRef.remove();
+  }
 }
 
 function archiveOrders() {
   console.log(moment().format(), 'Archiving orders');
   ref.child('orders').once('value').then((snapshot) => {
-    snapshot.forEach(function(orderSnapshot) {
+    snapshot.forEach(function (orderSnapshot) {
       let order = orderSnapshot.val();
       if (order.status === 'closed') {
         api.archiveOrder(orderSnapshot.key);
@@ -78,7 +80,8 @@ function startArchiver() {
     let every5minutes = (moment().add(5, 'minutes'));
     let hourly = moment().add(1, 'hour').startOf('hour');
     let midnight = (moment().endOf('day'));
-    return hourly.diff(moment(), 'milliseconds');
+    // return hourly.diff(moment(), 'milliseconds');
+    return 5000;
   }
 }
 
