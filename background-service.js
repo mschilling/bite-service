@@ -55,7 +55,7 @@ function cleanupOrderData(snapshot) {
 function archiveOrders() {
   console.log(moment().format(), 'Archiving orders');
   ref.child('orders').once('value').then((snapshot) => {
-    snapshot.forEach(function (orderSnapshot) {
+    snapshot.forEach(function(orderSnapshot) {
       let order = orderSnapshot.val();
       if (order.status === 'closed') {
         api.archiveOrder(orderSnapshot.key);
@@ -78,7 +78,7 @@ function startArchiver() {
     let every5minutes = (moment().add(5, 'minutes'));
     let hourly = moment().add(1, 'hour').startOf('hour');
     let midnight = (moment().endOf('day'));
-    return midnight.diff(moment(), 'milliseconds');
+    return hourly.diff(moment(), 'milliseconds');
   }
 }
 
