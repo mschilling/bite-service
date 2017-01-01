@@ -13,10 +13,9 @@ ref.child('orders').on('child_added', (snapshot) => {
 
 ref.child('subscribe_queue').on('child_added', onSubscribe);
 
-
 function onOrderStatusChanged(snapshot) {
   const orderId = snapshot.ref.parent.key;
-  console.log(`Order status ${orderId} set to ${snapshot.val()}`);
+  // console.log(`Order status ${orderId} set to ${snapshot.val()}`);
   switch (snapshot.val()) {
     case 'new':
       snapshot.ref.set('open');
@@ -97,17 +96,28 @@ function onSubscribe(snapshot) {
       fcm.unSubscribeTopic(token, topic);
     }
   } else {
-    // Obsolete! Client should always provide (valid) topic name
-    // Initial setup? Subscribe to notify_system and all
-    ['notify_system', 'notify_all'].forEach((t) => {
-      // updates[`user_subscriptions/${user}`] = {[t]: value};
-      updates[t] = value;
-
-      if (subscribe) {
-        fcm.subscribeTopic(token, t);
-      } else {
-        fcm.unSubscribeTopic(token, t);
+    ref.child('user_subscriptions/' + user + '/').once('value').then(function (snapshot) {
+      let subscriptions = snapshot.val();
+      if (!subscriptions) {
+        subscriptions = {
+          notify_bite_open: true,
+          notify_bite_closing: true,
+          notify_bite_closed: true,
+          notify_system: true
+        };
+        api.setUserSubscriptions(user, subscriptions);
       }
+
+      Object.keys(subscriptions).forEach((t) => {
+        // updates[`user_subscriptions/${user}`] = {[t]: value};
+        updates[t] = value;
+
+        if (subscribe) {
+          fcm.subscribeTopic(token, t);
+        } else {
+          fcm.unSubscribeTopic(token, t);
+        }
+      });
     });
   }
 
