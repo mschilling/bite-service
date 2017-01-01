@@ -97,6 +97,7 @@ function onSubscribe(snapshot) {
       fcm.unSubscribeTopic(token, topic);
     }
   } else {
+    // Obsolete! Client should always provide (valid) topic name
     // Initial setup? Subscribe to notify_system and all
     ['notify_system', 'notify_all'].forEach((t) => {
       // updates[`user_subscriptions/${user}`] = {[t]: value};
@@ -110,7 +111,7 @@ function onSubscribe(snapshot) {
     });
   }
 
-  api.setUserSubscription(user, updates);
+  // api.setUserSubscription(user, updates);
 
   // Cleanup form queue
   setTimeout(() => api.removeSubscriptionFromQueue(snapshot.key), 1000);
