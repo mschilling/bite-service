@@ -9,7 +9,7 @@ fcm.setDebugToken(fbConfig.fcmDebugToken);
 
 // api.onBiteOpened((snapshot) => notifyBiteIsOpen(snapshot));
 api.onBiteClosed((snapshot) => api.archiveOrder(snapshot.key));
-api.onBiteRemoved((snapshot) => notifyBiteIsClosed(snapshot));
+// api.onBiteRemoved((snapshot) => notifyBiteIsClosed(snapshot));
 
 api.onSubscribe((snapshot) => onSubscribe(snapshot));
 
@@ -20,9 +20,15 @@ ref.child('orders').on('child_added', (snapshot) => {
 function onOrderStatusChanged(snapshot) {
   const orderId = snapshot.ref.parent.key;
   console.log(`Order status ${orderId} set to ${snapshot.val()}`);
-  if (snapshot.val() === 'new') {
-    snapshot.ref.set('open');
-    notifyBiteIsOpen(orderId);
+  switch (snapshot.val()) {
+    case 'new':
+      snapshot.ref.set('open');
+      notifyBiteIsOpen(orderId);
+      break;
+    case 'closed':
+      // snapshot.ref.set('open');
+      notifyBiteIsClosed(orderId);
+      break;
   }
 }
 
@@ -42,8 +48,8 @@ function notifyBiteIsOpen(orderId) {
     });
 }
 
-function notifyBiteIsClosed(snapshot) {
-  getOrderDetails(snapshot.val())
+function notifyBiteIsClosed(orderId) {
+  getOrderDetails(orderId)
     .then((data) => {
       fcm.sendPush({
         to: '/topics/notify_bite_closed',
@@ -51,7 +57,7 @@ function notifyBiteIsClosed(snapshot) {
           type: 0,
           title: `${data.store.name} is gesloten`,
           message: `${data.user.name}'s Bite ${data.store.name} is helaas verwijderd 😢`,
-          bite: snapshot.key,
+          bite: orderId,
           image_url: data.user.photo_url
         }
       });
