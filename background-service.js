@@ -80,8 +80,8 @@ function startArchiver() {
     let every5minutes = (moment().add(5, 'minutes'));
     let hourly = moment().add(1, 'hour').startOf('hour');
     let midnight = (moment().endOf('day'));
-    // return hourly.diff(moment(), 'milliseconds');
-    return 5000;
+    return hourly.diff(moment(), 'milliseconds');
+    // return 5000;
   }
 }
 
