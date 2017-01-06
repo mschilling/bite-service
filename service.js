@@ -201,8 +201,8 @@ function startArchiver() {
     const every5minutes = (moment().add(5, 'minutes'));
     const hourly = moment().add(1, 'hour').startOf('hour');
     const midnight = (moment().endOf('day'));
-    // return hourly.diff(moment(), 'milliseconds');
-    return 5000;
+    return every5minutes.diff(moment(), 'milliseconds');
+    // return 5000;
   }
 }
 
