@@ -84,7 +84,7 @@ function getOrderDetails(orderId) {
 
 function onSubscribe(snapshot) {
   let {user, token, topic, subscribe = false} = snapshot.val();
-  let value = (subscribe === true ? true : null);
+  const value = (subscribe === true ? true : null);
   const updates = {};
 
   if (topic) {
