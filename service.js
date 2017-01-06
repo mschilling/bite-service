@@ -1,4 +1,3 @@
-// const moment = require('moment');
 const api = require('./lib/bite-api');
 const ref = api.getFirebaseRef();
 
