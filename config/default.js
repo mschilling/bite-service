@@ -11,5 +11,5 @@ module.exports = {
     debugToken: process.env.FCM_TEST_TOKEN
   },
   log: 'debug',
-  version: '0.0.1-SNAPSHOT'
+  version: '0.0.1'
 };
