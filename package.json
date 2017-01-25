@@ -18,7 +18,9 @@
   "homepage": "https://github.com/mschilling/bite-service#readme",
   "dependencies": {
     "axios": "^0.15.3",
+    "dotenv": "^4.0.0",
     "firebase": "^3.6.4",
+    "lodash": "^4.17.4",
     "moment": "^2.17.1"
   },
   "devDependencies": {
