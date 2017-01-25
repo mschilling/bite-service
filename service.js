@@ -189,6 +189,9 @@ function archiveOrders() {
   });
 }
 
+/**
+ * Start Archiver
+ */
 function startArchiver() {
   console.log('Archiver started');
   let timer = setTimeout(onArchiverTimer, getNextTimerValue());
