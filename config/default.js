@@ -10,5 +10,6 @@ module.exports = {
     authKey: process.env.FCM_AUTH_KEY,
     debugToken: process.env.FCM_TEST_TOKEN
   },
-  log: 'debug'
+  log: 'debug',
+  version: '0.0.1-SNAPSHOT'
 };
