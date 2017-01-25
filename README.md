@@ -4,6 +4,8 @@
 
 ### Clone this repository
 
+* Run `git clone https://github.com/mschilling/bite-service.git` (or ssh)
+
 ### Install dependencies
 
 * Run `npm install`
