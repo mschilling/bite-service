@@ -1,11 +1,14 @@
+'use strict';
+
+require('dotenv').config({silent: true});
+const config = require('./config');
 const moment = require('moment');
 const api = require('./lib/bite-api');
-const ref = api.getFirebaseRef();
-
-const fbConfig = require('./.config/config.json');
 const fcm = require('./lib/fcm-helper');
-fcm.setAuthorization(fbConfig.fbAuthKey);
-fcm.setDebugToken(fbConfig.fcmDebugToken);
+
+const ref = api.getFirebaseRef();
+fcm.setAuthorization(config.fcm.authKey);
+fcm.setDebugToken(config.fcm.debugToken);
 
 ref.child('orders').on('child_added', (snapshot) => {
   snapshot.ref.child('status').on('value', onOrderStatusChanged);
