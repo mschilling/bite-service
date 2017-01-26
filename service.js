@@ -8,7 +8,7 @@ const fcm = require('./lib/fcm-helper');
 
 const ref = api.getFirebaseRef();
 fcm.setAuthorization(config.fcm.authKey);
-fcm.setDebugToken(config.fcm.debugToken);
+// fcm.setDebugToken(config.fcm.debugToken);
 
 ref.child('orders').on('child_added', (snapshot) => {
   snapshot.ref.child('status').on('value', onOrderStatusChanged);
@@ -136,7 +136,6 @@ function onSubscribe(snapshot) {
   setTimeout(() => api.removeSubscriptionFromQueue(snapshot.key), 1000);
 };
 
-// Code below taken from background-service.js
 function verifyOrderConsistency(snapshot) {
   // let { user, token, topic, subscribe = false } = snapshot.val();
   const order = snapshot.val();
@@ -158,6 +157,12 @@ function verifyOrderConsistency(snapshot) {
 
   if (!order.status) {
     order.status = 'new';
+    objectChanged = true;
+  }
+
+  if (!order.close_time && order.duration) {
+    const closingTime = moment(order.open_time).add(order.duration, 'minutes');
+    order.close_time = closingTime.valueOf();
     objectChanged = true;
   }
 
@@ -204,7 +209,7 @@ function startArchiver() {
     const every5minutes = (moment().add(5, 'minutes'));
     const hourly = moment().add(1, 'hour').startOf('hour');
     const midnight = (moment().endOf('day'));
-    return every5minutes.diff(moment(), 'milliseconds');
+    return hourly.diff(moment(), 'milliseconds');
     // return 5000;
   }
 }
