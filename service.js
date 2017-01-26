@@ -11,13 +11,14 @@ fcm.setAuthorization(config.fcm.authKey);
 // fcm.setDebugToken(config.fcm.debugToken);
 
 ref.child('orders').on('child_added', (snapshot) => {
-  snapshot.ref.child('status').on('value', onOrderStatusChanged);
+  console.log(`Order ${snapshot.key} added`);
+  verifyOrderConsistency(snapshot)
+    .then((snapshot)=> {
+      snapshot.ref.child('status').on('value', onOrderStatusChanged);
+    });
 });
 
 ref.child('subscribe_queue').on('child_added', onSubscribe);
-
-// On Every Order Added
-ref.child('orders').on('child_added', verifyOrderConsistency);
 
 // On Every Order Removed
 ref.child('orders').on('child_removed', cleanupOrderData);
@@ -167,8 +168,10 @@ function verifyOrderConsistency(snapshot) {
   }
 
   if (objectChanged) {
-    snapshot.ref.set(order);
+    return snapshot.ref.set(order).then(() => snapshot);
   }
+
+  return Promise.resolve(snapshot);
 }
 
 function cleanupOrderData(snapshot) {
