@@ -1,6 +1,6 @@
 'use strict';
 
-require('dotenv').config({silent: true});
+require('dotenv').config({ silent: true });
 const config = require('./config');
 const moment = require('moment');
 const api = require('./lib/bite-api');
@@ -13,8 +13,9 @@ fcm.setAuthorization(config.fcm.authKey);
 ref.child('orders').on('child_added', (snapshot) => {
   console.log(`Order ${snapshot.key} added`);
   verifyOrderConsistency(snapshot)
-    .then((snapshot)=> {
+    .then((snapshot) => {
       snapshot.ref.child('status').on('value', onOrderStatusChanged);
+      snapshot.ref.child('action').on('value', onOrderActionChanged);
     });
 });
 
@@ -34,6 +35,20 @@ function onOrderStatusChanged(snapshot) {
     case 'closed':
       // snapshot.ref.set('open');
       notifyBiteIsClosed(orderId);
+      break;
+  }
+}
+
+function onOrderActionChanged(snapshot) {
+  const orderId = snapshot.ref.parent.key;
+  switch (snapshot.val()) {
+    case 'archive':
+      snapshot.ref.remove()
+        .then(() => api.archiveOrder(orderId));
+      break;
+    case 'close':
+      snapshot.ref.remove()
+        .then(() => snapshot.ref.parent.child('status').set('closed'));
       break;
   }
 }
