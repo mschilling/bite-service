@@ -36,6 +36,7 @@ function onOrderActionChanged(snapshot) {
     case 'close':
       snapshot.ref.remove()
         .then(() => snapshot.ref.parent.child('status').set('closed'))
+        .then(() => snapshot.ref.parent.child('close_time').set(moment().valueOf()))
         .then(() => notifyBiteIsClosed(orderId))
         ;
       break;
