@@ -42,6 +42,7 @@ function notifyBiteIsOpen(orderId) {
   getOrderDetails(orderId)
     .then((data) => {
       fcm.sendPush({
+        collapse_key: orderId,
         to: '/topics/notify_bite_open',
         data: {
           type: 0,
@@ -58,6 +59,7 @@ function notifyBiteIsClosed(orderId) {
   getOrderDetails(orderId)
     .then((data) => {
       fcm.sendPush({
+        collapse_key: orderId,
         to: '/topics/notify_bite_closed',
         data: {
           type: 0,
@@ -212,7 +214,7 @@ function startArchiver() {
     const every5minutes = (moment().add(5, 'minutes'));
     const hourly = moment().add(1, 'hour').startOf('hour');
     const midnight = (moment().endOf('day'));
-    return hourly.diff(moment(), 'milliseconds');
+    return every5minutes.diff(moment(), 'milliseconds');
     // return 5000;
   }
 }
