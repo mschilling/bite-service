@@ -1,6 +1,6 @@
 'use strict';
 
-require('dotenv').config({silent: true});
+require('dotenv').config({ silent: true });
 const config = require('./config');
 const moment = require('moment');
 const api = require('./lib/bite-api');
@@ -8,31 +8,46 @@ const fcm = require('./lib/fcm-helper');
 
 const ref = api.getFirebaseRef();
 fcm.setAuthorization(config.fcm.authKey);
-fcm.setDebugToken(config.fcm.debugToken);
+// fcm.setDebugToken(config.fcm.debugToken);
 
 ref.child('orders').on('child_added', (snapshot) => {
-  snapshot.ref.child('status').on('value', onOrderStatusChanged);
+  console.log(`Order ${snapshot.key} added`);
+  verifyOrderConsistency(snapshot)
+    .then((snapshot) => {
+      // snapshot.ref.child('status').on('value', onOrderStatusChanged);
+      snapshot.ref.child('action').on('value', onOrderActionChanged);
+    });
 });
 
 ref.child('subscribe_queue').on('child_added', onSubscribe);
 
-// On Every Order Added
-ref.child('orders').on('child_added', verifyOrderConsistency);
-
 // On Every Order Removed
 ref.child('orders').on('child_removed', cleanupOrderData);
 
-function onOrderStatusChanged(snapshot) {
+function onOrderActionChanged(snapshot) {
   const orderId = snapshot.ref.parent.key;
-  // console.log(`Order status ${orderId} set to ${snapshot.val()}`);
   switch (snapshot.val()) {
-    case 'new':
-      snapshot.ref.set('open');
-      notifyBiteIsOpen(orderId);
+    case 'add':
+      snapshot.ref.remove()
+        .then(() => snapshot.ref.parent.child('status').set('open'))
+        .then(() => notifyBiteIsOpen(orderId))
+        ;
       break;
-    case 'closed':
-      // snapshot.ref.set('open');
-      notifyBiteIsClosed(orderId);
+    case 'close':
+      snapshot.ref.remove()
+        .then(() => snapshot.ref.parent.child('status').set('closed'))
+        .then(() => snapshot.ref.parent.child('close_time').set(moment().valueOf()))
+        .then(() => notifyBiteIsClosed(orderId))
+        ;
+      break;
+    case 'archive':
+      snapshot.ref.remove()
+        .then(() => api.archiveOrder(orderId));
+      break;
+    case 'remove':
+      snapshot.ref.remove()
+        .then(() => api.removeOrder(orderId))
+        ;
       break;
   }
 }
@@ -41,6 +56,7 @@ function notifyBiteIsOpen(orderId) {
   getOrderDetails(orderId)
     .then((data) => {
       fcm.sendPush({
+        collapse_key: orderId,
         to: '/topics/notify_bite_open',
         data: {
           type: 0,
@@ -57,6 +73,7 @@ function notifyBiteIsClosed(orderId) {
   getOrderDetails(orderId)
     .then((data) => {
       fcm.sendPush({
+        collapse_key: orderId,
         to: '/topics/notify_bite_closed',
         data: {
           type: 0,
@@ -136,7 +153,6 @@ function onSubscribe(snapshot) {
   setTimeout(() => api.removeSubscriptionFromQueue(snapshot.key), 1000);
 };
 
-// Code below taken from background-service.js
 function verifyOrderConsistency(snapshot) {
   // let { user, token, topic, subscribe = false } = snapshot.val();
   const order = snapshot.val();
@@ -157,13 +173,22 @@ function verifyOrderConsistency(snapshot) {
   }
 
   if (!order.status) {
-    order.status = 'new';
+    order.status = 'open';
+    order.action = 'add';
+    objectChanged = true;
+  }
+
+  if (!order.close_time && order.duration) {
+    const closingTime = moment(order.open_time).add(order.duration, 'minutes');
+    order.close_time = closingTime.valueOf();
     objectChanged = true;
   }
 
   if (objectChanged) {
-    snapshot.ref.set(order);
+    return snapshot.ref.set(order).then(() => snapshot);
   }
+
+  return Promise.resolve(snapshot);
 }
 
 function cleanupOrderData(snapshot) {

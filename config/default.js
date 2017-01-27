@@ -8,8 +8,9 @@ module.exports = {
   },
   fcm: {
     authKey: process.env.FCM_AUTH_KEY,
+    pushEnabled: ((process.env.PUSH_ENABLED || false) === 'true'),
     debugToken: process.env.FCM_TEST_TOKEN
   },
   log: 'debug',
-  version: '0.0.1'
+  version: '0.0.2-SNAPSHOT'
 };
