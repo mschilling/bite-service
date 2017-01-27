@@ -14,7 +14,7 @@ ref.child('orders').on('child_added', (snapshot) => {
   console.log(`Order ${snapshot.key} added`);
   verifyOrderConsistency(snapshot)
     .then((snapshot) => {
-      snapshot.ref.child('status').on('value', onOrderStatusChanged);
+      // snapshot.ref.child('status').on('value', onOrderStatusChanged);
       snapshot.ref.child('action').on('value', onOrderActionChanged);
     });
 });
@@ -24,31 +24,29 @@ ref.child('subscribe_queue').on('child_added', onSubscribe);
 // On Every Order Removed
 ref.child('orders').on('child_removed', cleanupOrderData);
 
-function onOrderStatusChanged(snapshot) {
-  const orderId = snapshot.ref.parent.key;
-  // console.log(`Order status ${orderId} set to ${snapshot.val()}`);
-  switch (snapshot.val()) {
-    case 'new':
-      snapshot.ref.set('open');
-      notifyBiteIsOpen(orderId);
-      break;
-    case 'closed':
-      // snapshot.ref.set('open');
-      notifyBiteIsClosed(orderId);
-      break;
-  }
-}
-
 function onOrderActionChanged(snapshot) {
   const orderId = snapshot.ref.parent.key;
   switch (snapshot.val()) {
+    case 'add':
+      snapshot.ref.remove()
+        .then(() => snapshot.ref.parent.child('status').set('open'))
+        .then(() => notifyBiteIsOpen(orderId))
+        ;
+      break;
+    case 'close':
+      snapshot.ref.remove()
+        .then(() => snapshot.ref.parent.child('status').set('closed'))
+        .then(() => notifyBiteIsClosed(orderId))
+        ;
+      break;
     case 'archive':
       snapshot.ref.remove()
         .then(() => api.archiveOrder(orderId));
       break;
-    case 'close':
+    case 'remove':
       snapshot.ref.remove()
-        .then(() => snapshot.ref.parent.child('status').set('closed'));
+        .then(() => api.removeOrder(orderId))
+        ;
       break;
   }
 }
@@ -174,7 +172,8 @@ function verifyOrderConsistency(snapshot) {
   }
 
   if (!order.status) {
-    order.status = 'new';
+    order.status = 'open';
+    order.action = 'add';
     objectChanged = true;
   }
 
