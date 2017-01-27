@@ -7,8 +7,8 @@ const api = require('../lib/bite-api');
 
 const ref = api.getFirebaseRef();
 
-// api.archiveOrder('-KbV2SIFf4XFYd3eVMZi')
-//   .then(() => {
-//     console.log('done!');
-//   });
-// return;
+api.archiveOrder('-KbVBOAjUsZG77unETxM')
+  .then(() => {
+    console.log('done!');
+  });
+return;
