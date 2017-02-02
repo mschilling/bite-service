@@ -192,6 +192,7 @@ function verifyOrderConsistency(snapshot) {
 }
 
 function cleanupOrderData(snapshot) {
+  // console.log('cleanupOrderData', snapshot.val())
   const userOrderRef = ref.child('user_order').child(snapshot.key);
   const userOrderLockedRef = ref.child('user_order_locked').child(snapshot.key);
 
