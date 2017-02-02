@@ -8,26 +8,27 @@ const api = require('../lib/bite-api');
 const ref = api.getFirebaseRef();
 const baseRef = ref.child('_seed');
 
-getStoreData(3, 'Kebab', 'Gramsbergen')
+getStoreData(3, 'Izmir Grill', 'Gramsbergen')
   .then((store) => {
     const targetRef = baseRef.child(`restaurants/${store.id}`);
 
     const categories = [];
     switch (store.id) {
-      case 1:
-        categories.push({emoji: '🍔', name: 'Patat', type: '3'});
+      case 1: // Primataria
+        categories.push({emoji: '🍟', name: 'Patat', type: '3'});
+        categories.push({emoji: '🍔', name: 'Hamburger', type: '4'});
         categories.push({emoji: '🍺', name: 'Drinken', type: '8'});
-        categories.push({emoji: '🍉', name: 'Snack', type: '9'});
+        categories.push({emoji: '🌭', name: 'Snack', type: '9'});
        break;
-      case 2:
-        categories.push({emoji: '🍔', name: 'Patat', type: '3'});
+      case 2: //Visboer
+        categories.push({emoji: '🍔', name: 'Vis', type: '2'});
         categories.push({emoji: '🍺', name: 'Drinken', type: '8'});
-        categories.push({emoji: '🍉', name: 'Snack', type: '9'});
+        categories.push({emoji: '🌭', name: 'Snack', type: '9'});
         break;
-      case 3:
-        categories.push({emoji: '🍔', name: 'Patat', type: '3'});
+      case 3: // Kebab
+        categories.push({emoji: '🌯', name: 'Kebab', type: '5'});
         categories.push({emoji: '🍺', name: 'Drinken', type: '8'});
-        categories.push({emoji: '🍉', name: 'Snack', type: '9'});
+        categories.push({emoji: '🌭', name: 'Snack', type: '9'});
         break;
     }
     store.categories = categories;
