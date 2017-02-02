@@ -1,6 +1,6 @@
 'use strict';
 
-require('dotenv').config({ silent: true });
+require('dotenv').config({silent: true});
 const config = require('../config');
 const moment = require('moment');
 const api = require('../lib/bite-api');
@@ -11,6 +11,26 @@ const baseRef = ref.child('_seed');
 getStoreData(3, 'Kebab', 'Gramsbergen')
   .then((store) => {
     const targetRef = baseRef.child(`restaurants/${store.id}`);
+
+    const categories = [];
+    switch (store.id) {
+      case 1:
+        categories.push({emoji: '🍔', name: 'Patat', type: '3'});
+        categories.push({emoji: '🍺', name: 'Drinken', type: '8'});
+        categories.push({emoji: '🍉', name: 'Snack', type: '9'});
+       break;
+      case 2:
+        categories.push({emoji: '🍔', name: 'Patat', type: '3'});
+        categories.push({emoji: '🍺', name: 'Drinken', type: '8'});
+        categories.push({emoji: '🍉', name: 'Snack', type: '9'});
+        break;
+      case 3:
+        categories.push({emoji: '🍔', name: 'Patat', type: '3'});
+        categories.push({emoji: '🍺', name: 'Drinken', type: '8'});
+        categories.push({emoji: '🍉', name: 'Snack', type: '9'});
+        break;
+    }
+    store.categories = categories;
     targetRef.set(store);
   });
 
